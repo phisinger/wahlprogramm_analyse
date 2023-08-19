@@ -10,35 +10,40 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 
-output_string = StringIO()
+def pdf2txt():
 
-# get file paths
-raw_data_path = os.path.join(Path().resolve().parent, "data", "raw")
-txt_data_path = os.path.join(Path().resolve().parent, "data", "text")
-print("Write files to:")
+    output_string = StringIO()
 
-# I only take the last three elections
-for year in ["2013", "2017", "2021"]:
-    for filename in glob.glob(pathname=("*"+year+".pdf"), root_dir=raw_data_path): # type: ignore
-        file_path = os.path.join(raw_data_path, filename)
+    # get file paths
+    raw_data_path = os.path.join(Path().resolve().parent, "data", "raw")
+    txt_data_path = os.path.join(Path().resolve().parent, "data", "text")
+    print("Write files to:")
 
-        # read pdf and convert it to string
-        with open(file_path, 'rb') as in_file:
-            parser = PDFParser(in_file)
-            doc = PDFDocument(parser)
-            rsrcmgr = PDFResourceManager()
-            device = TextConverter(rsrcmgr, output_string, laparams=LAParams())
-            interpreter = PDFPageInterpreter(rsrcmgr, device)
-            for page in PDFPage.create_pages(doc):
-                interpreter.process_page(page)
+    # I only take the last three elections
+    for year in ["2013", "2017", "2021"]:
+        for filename in glob.glob(pathname=("*"+year+".pdf"), root_dir=raw_data_path): # type: ignore
+            file_path = os.path.join(raw_data_path, filename)
 
-        # contruct new file names
-        dest_file_path = os.path.join(txt_data_path, filename.replace(".pdf", ".txt"))
-        
-        
-        print(dest_file_path)
-        
-        with open(dest_file_path, "w") as out_file:
-            out_file.write(output_string.getvalue())
+            # read pdf and convert it to string
+            with open(file_path, 'rb') as in_file:
+                parser = PDFParser(in_file)
+                doc = PDFDocument(parser)
+                rsrcmgr = PDFResourceManager()
+                device = TextConverter(rsrcmgr, output_string, laparams=LAParams())
+                interpreter = PDFPageInterpreter(rsrcmgr, device)
+                for page in PDFPage.create_pages(doc):
+                    interpreter.process_page(page)
+
+            # contruct new file names
+            dest_file_path = os.path.join(txt_data_path, filename.replace(".pdf", ".txt"))
             
-print("Finished")
+            
+            print(dest_file_path)
+            
+            with open(dest_file_path, "w") as out_file:
+                out_file.write(output_string.getvalue())
+                
+    print("Finished")
+    
+if __name__ == "__main__":
+    pdf2txt()
