@@ -1,49 +1,43 @@
 from io import StringIO
 import os
-from pathlib import Path
 import glob
+import pdftotext
 
-from pdfminer.converter import TextConverter
-from pdfminer.layout import LAParams
-from pdfminer.pdfdocument import PDFDocument
-from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfparser import PDFParser
 
 def pdf2txt():
 
-    output_string = StringIO()
-
     # get file paths
-    raw_data_path = os.path.join(Path().resolve().parent, "data", "raw")
-    txt_data_path = os.path.join(Path().resolve().parent, "data", "text")
-    print("Write files to:")
+    raw_data_path = os.path.join(os.getcwd(), "data", "raw")
+    txt_data_path = os.path.join(os.getcwd(), "data", "text")
+    print("Read files from: ", raw_data_path)
+    print("Write files to: ", txt_data_path)
 
     # I only take the last three elections
     for year in ["2013", "2017", "2021"]:
-        for filename in glob.glob(pathname=("*"+year+".pdf"), root_dir=raw_data_path): # type: ignore
+        pathname = "*"+year+".pdf"
+        for filename in glob.glob(pathname=pathname, root_dir=raw_data_path):
             file_path = os.path.join(raw_data_path, filename)
+
+            output_string = StringIO()
 
             # read pdf and convert it to string
             with open(file_path, 'rb') as in_file:
-                parser = PDFParser(in_file)
-                doc = PDFDocument(parser)
-                rsrcmgr = PDFResourceManager()
-                device = TextConverter(rsrcmgr, output_string, laparams=LAParams())
-                interpreter = PDFPageInterpreter(rsrcmgr, device)
-                for page in PDFPage.create_pages(doc):
-                    interpreter.process_page(page)
+                pdf = pdftotext.PDF(in_file)
+            in_file.close()
 
             # contruct new file names
-            dest_file_path = os.path.join(txt_data_path, filename.replace(".pdf", ".txt"))
-            
-            
+            dest_file_path = os.path.join(
+                txt_data_path, filename.replace(".pdf", ".txt"))
+
             print(dest_file_path)
-            
-            with open(dest_file_path, "w") as out_file:
-                out_file.write(output_string.getvalue())
-                
+
+            with open(dest_file_path, "w+") as out_file:
+                out_file.write("".join(pdf))
+            out_file.close()
+
     print("Finished")
-    
+    return
+
+
 if __name__ == "__main__":
     pdf2txt()
