@@ -1,3 +1,5 @@
 .conda/
-
+txt/
+clean/
+chapters/
 private readme.md

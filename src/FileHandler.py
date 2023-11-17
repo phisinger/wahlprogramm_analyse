@@ -8,13 +8,18 @@ import re
 
 class FileHandler(object):
     def __init__(self) -> None:
-        self.data_dir = os.path.dirname(
-            os.path.dirname(os.path.realpath(__file__)))
+        self.data_dir = os.path.join(os.path.dirname(
+            os.path.dirname(os.path.realpath(__file__))), "data")
         self.directories = {"raw": os.path.join(self.data_dir, "raw"),
                             "txt": os.path.join(self.data_dir, "txt"),
                             "chapters": os.path.join(self.data_dir, "chapters"),
                             "clean": os.path.join(self.data_dir, "clean"),
                             "clean chapters": os.path.join(self.data_dir, "chapters", "clean")}
+
+        # Check if the directories are present, if not create them
+        for _, dir in self.directories.items():
+            if not os.path.exists(dir):
+                os.makedirs(dir)
 
     def open_pdf_files(self, source_dir: str,
                        years: Optional[list[str]] = None,
@@ -94,69 +99,78 @@ class FileHandler(object):
     def store_file(self, target_dir: str,
                    file_name: str,
                    content: str) -> None:
-        print("Write files to: ", txt_data_path)
+        out_file_path = os.path.join(self.directories[target_dir], file_name)
+        with open(out_file_path, "w+") as out_file:
+            out_file.write(content)
+        print("Write files to: ", out_file_path)
+        return
 
+    def extract_complete(self, source_dir: str,
+                         target_dir: str,
+                         years: list[str] = ["2013", "2017", "2021"],
+                         parties: Optional[list[str]] = None,
+                         debug: bool = False) -> None:
+        """
+        Transform the complete pdf document into one text file.
+        """
 
-def convert_pdf2text():
+        # open pdf
+        doc_dict = self.open_pdf_files(source_dir, years, parties, True)
 
-    # get file paths
-    raw_data_path = os.path.join(os.getcwd(), "data", "raw")
-    txt_data_path = os.path.join(os.getcwd(), "data", "text_truncated")
-    print("Read files from: ", raw_data_path)
-    print("Write files to: ", txt_data_path)
-
-    # I only take the last three elections
-    for year in ["2013", "2017", "2021"]:
-        for party in ["afd", "cdu", "fdp", "gruene", "linke", "spd"]:
-            filename = party + "_" + year + ".pdf"
-            in_file_path = os.path.join(raw_data_path, filename)
-            print(filename)
-            doc = fitz.open(in_file_path)  # type: ignore
-
-            if party == "afd" and year == "2021":
-                text_box = (34, 89, 398, 556)
-            elif party == "afd" and year == "2017":
-                text_box = (119, 90, 668, 551)
-            elif party == "afd" and year == "2013":
-                text_box = (113, 85, 521, 669)
-            elif party == "cdu":
-                if year == "2013":
-                    text_box = (70, 174, 541, 798)
+        # Apply custom text boxes
+        for year in doc_dict.keys():
+            for party in doc_dict[year].keys():
+                if party == "afd" and year == "2021":
+                    text_box = (34, 89, 398, 556)
+                elif party == "afd" and year == "2017":
+                    text_box = (119, 90, 668, 551)
+                elif party == "afd" and year == "2013":
+                    text_box = (113, 85, 521, 669)
+                elif party == "cdu":
+                    if year == "2013":
+                        text_box = (70, 174, 541, 798)
+                    else:
+                        text_box = (79, 70, 527, 770)
+                elif party == "fdp" and year == "2021":
+                    text_box = (42, 115, 555, 799)
+                elif party == "fdp" and year == "2017":
+                    text_box = (43, 43, 379, 525)
+                elif party == "fdp" and year == "2013":
+                    text_box = (35, 35, 386, 552)
+                elif party == "gruene":
+                    if year == "2013":
+                        text_box = (42, 66, 315, 465)
+                    else:
+                        text_box = (107, 103, 492, 744)
+                elif party == "linke":
+                    text_box = (42, 41, 439, 639)
+                    pass
+                elif party == "spd" and year == "2021":
+                    text_box = (70, 96, 536, 756)
+                elif party == "spd" and year == "2017":
+                    text_box = (42, 63, 366, 566)
+                elif party == "spd" and year == "2013":
+                    text_box = (70, 70, 524, 761)
                 else:
-                    text_box = (79, 70, 527, 770)
-            elif party == "fdp" and year == "2021":
-                text_box = (42, 115, 555, 799)
-            elif party == "fdp" and year == "2017":
-                text_box = (43, 43, 379, 525)
-            elif party == "fdp" and year == "2013":
-                text_box = (35, 35, 386, 552)
-            elif party == "gruene":
-                if year == "2013":
-                    text_box = (42, 66, 315, 465)
-                else:
-                    text_box = (107, 103, 492, 744)
-            elif party == "linke":
-                text_box = (42, 41, 439, 639)
-                pass
-            elif party == "spd" and year == "2021":
-                text_box = (70, 96, 536, 756)
-            elif party == "spd" and year == "2017":
-                text_box = (42, 63, 366, 566)
-            elif party == "spd" and year == "2013":
-                text_box = (70, 70, 524, 761)
-            else:
-                print("Document type not found. No textbox is applied.")
-                text_box = None
+                    print("Document type not found. No textbox is applied.")
+                    text_box = None
 
-            out_file_path = os.path.join(
-                txt_data_path, filename.replace(".pdf", ".txt"))
-            with open(out_file_path, "w+") as out_file:
-                for page in doc:
-                    core_text = page.get_textbox(text_box)
-                    out_file.write(core_text)
-    print("Finished")
-    return
+                # Extract core text
+                core_text = ""
+                for page in doc_dict[year][party]:
+                    core_text += page.get_textbox(text_box)  # type: ignore
+                # Store core text as txt
+                output_file_name = f"{party}_{year}.txt"
+                self.store_file(target_dir, output_file_name, core_text)
+        return
+
+    def extract_chapters():
+        """
+        Transform the pdf document into multiple text files containing a chapter each."""
+
+        return
 
 
 if __name__ == "__main__":
-    convert_pdf2text()
+    fh = FileHandler()
+    fh.extract_complete("raw", "txt", debug=True)
