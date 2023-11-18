@@ -57,7 +57,7 @@ class FileHandler(object):
     def open_txt_files(self, source_dir: str,
                        years: Optional[list[str]] = None,
                        parties: Optional[list[str]] = None,
-                       debug: Optional[bool] = None) -> dict[str, dict[str, str]]:
+                       debug: Optional[bool] = None) -> dict[str, dict[str, list]]:
         if years is None:
             years = ["1949", "1953", "1957", "1961", "1965", "1969", "1972", "1976", "1980",
                      "1983", "1987", "1990", "1994", "1998", "2002", "2005", "2009", "2013", "2017", "2021"]
@@ -70,29 +70,33 @@ class FileHandler(object):
 
         # Initialize empty two dimensional dict
         output_dict = {}
-        for year in years:
-            output_dict[year] = {}
-            for party in parties:
-                output_dict[year][party] = []
 
         file_list = os.listdir(self.directories[source_dir])
         file_list.sort()
         for file_name in file_list:
             party = file_name.split("_")[0]
-            year = file_name.split("_")[1]
+            year = file_name.split("_")[1].split(".")[0]
             if party in parties and year in years:
                 in_file_path = os.path.join(
                     self.directories[source_dir], file_name)
                 try:
+                    # define further dic structure when needed
+                    if not (year in output_dict.keys()):
+                        output_dict[year] = {}
+                    if not (party in output_dict[year].keys()):
+                        output_dict[year][party] = []
+
                     with codecs.open(in_file_path, mode="r", encoding="utf-8") as in_file:
                         content = in_file.read()
-                        output_dict[year][party] = output_dict[year][party].append(
+                        output_dict[year][party].append(
                             content)
                 except Exception:
                     if debug:
                         print(
                             f"Cannot find file: {file_name}. Continue with next one.")
                     continue
+            else:
+                del output_dict[year][party]
 
         return output_dict
 
@@ -148,7 +152,7 @@ class FileHandler(object):
                 elif party == "spd" and year == "2021":
                     text_box = (70, 96, 536, 756)
                 elif party == "spd" and year == "2017":
-                    text_box = (42, 63, 366, 566)
+                    text_box = (42, 63, 400, 566)
                 elif party == "spd" and year == "2013":
                     text_box = (70, 70, 524, 761)
                 else:

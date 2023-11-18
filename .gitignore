@@ -3,3 +3,4 @@ txt/
 clean/
 chapters/
 private readme.md
+src/__pycache__/
