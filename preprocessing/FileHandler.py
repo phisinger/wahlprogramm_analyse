@@ -80,7 +80,7 @@ class FileHandler(object):
                 in_file_path = os.path.join(
                     self.directories[source_dir], file_name)
                 try:
-                    # define further dic structure when needed
+                    # define further dict structure when needed
                     if not (year in output_dict.keys()):
                         output_dict[year] = {}
                     if not (party in output_dict[year].keys()):
@@ -95,8 +95,6 @@ class FileHandler(object):
                         print(
                             f"Cannot find file: {file_name}. Continue with next one.")
                     continue
-            else:
-                del output_dict[year][party]
 
         return output_dict
 
@@ -132,9 +130,9 @@ class FileHandler(object):
                     text_box = (113, 85, 521, 669)
                 elif party == "cdu":
                     if year == "2013":
-                        text_box = (70, 174, 541, 798)
+                        text_box = (60, 174, 541, 805)
                     else:
-                        text_box = (79, 70, 527, 770)
+                        text_box = (65, 70, 527, 770)
                 elif party == "fdp" and year == "2021":
                     text_box = (42, 115, 555, 799)
                 elif party == "fdp" and year == "2017":
