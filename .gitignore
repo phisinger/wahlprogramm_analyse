@@ -4,3 +4,5 @@ clean/
 chapters/
 private readme.md
 */__pycache__/
+models/
+data/vectorstore/
