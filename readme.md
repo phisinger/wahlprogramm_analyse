@@ -9,4 +9,5 @@ This repo contains analyses of election programs for German parliament (Bundesta
 2. Sentiment analysis:
    1. How does a party look at different topics?
    2. Is the program rather negative or rather positive in general?
-3. Chatbot for election programs
+3. Chatbot for election programs  
+   See local implementation based on langchain and GPT4ALL model [here](GenAI/).
