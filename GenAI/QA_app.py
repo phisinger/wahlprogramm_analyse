@@ -4,12 +4,23 @@ from langchain.embeddings import GPT4AllEmbeddings
 from langchain.vectorstores import Chroma
 from Vectorstore import Vectorstore_client
 import gradio as gr
+import os
+import requests
 
 # Load Model
 from langchain.llms import GPT4All
 
+modelPath = "/home/phisinger/Programmieren/wahlprogramm_analyse/models/mistral-7b-openorca.Q4_0.gguf"
+if (os.path.exists(modelPath) == False):
+    url = "https://huggingface.co/TheBloke/Mistral-7B-OpenOrca-GGUF/raw/main/mistral-7b-openorca.Q4_0.gguf?download=true"
+    response = requests.get(url)
+    with open("./model.gguf", mode="wb") as file:
+        file.write(response.content)
+    print("Model downloaded")
+    modelPath = "./model.gguf"
+
 llm = GPT4All(
-    model="/home/phisinger/Programmieren/wahlprogramm_analyse/models/mistral-7b-openorca.Q4_0.gguf",
+    model=modelPath,
     max_tokens=2048,
 )
 
