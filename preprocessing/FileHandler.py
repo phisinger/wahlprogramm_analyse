@@ -172,7 +172,79 @@ class FileHandler(object):
 
         return
 
+    def extract_to_markdown(self, source_dir: str,
+                            target_dir: str,
+                            years: list[str] = ["2013", "2017", "2021"],
+                            parties: Optional[list[str]] = None,
+                            debug: bool = False) -> None:
+        """
+        Transform the complete pdf document into one text file conserving headlines as markdown headlines.
+        """
+
+        # open pdf
+        doc_dict = self.open_pdf_files(source_dir, years, parties, True)
+
+        # Apply custom text boxes
+        for year in doc_dict.keys():
+            for party in doc_dict[year].keys():
+                if party == "afd" and year == "2021":
+                    text_box = (34, 89, 398, 556)
+                elif party == "afd" and year == "2017":
+                    text_box = (119, 90, 668, 551)
+                elif party == "afd" and year == "2013":
+                    text_box = (113, 85, 521, 669)
+                elif party == "cdu":
+                    if year == "2013":
+                        text_box = (60, 174, 541, 805)
+                    else:
+                        text_box = (65, 70, 527, 770)
+                elif party == "fdp" and year == "2021":
+                    text_box = (42, 115, 555, 799)
+                elif party == "fdp" and year == "2017":
+                    text_box = (43, 43, 379, 525)
+                elif party == "fdp" and year == "2013":
+                    text_box = (35, 35, 386, 552)
+                elif party == "gruene":
+                    if year == "2013":
+                        text_box = (42, 66, 315, 465)
+                    else:
+                        text_box = (107, 103, 492, 744)
+                elif party == "linke":
+                    text_box = (42, 41, 439, 639)
+                    pass
+                elif party == "spd" and year == "2021":
+                    text_box = (70, 96, 536, 756)
+                elif party == "spd" and year == "2017":
+                    text_box = (42, 63, 400, 566)
+                elif party == "spd" and year == "2013":
+                    text_box = (70, 70, 524, 761)
+                else:
+                    print("Document type not found. No textbox is applied.")
+                    text_box = None
+
+                # get table of content
+                toc = doc_dict[year][party].get_toc()  # type: ignore
+
+                # Extract core text
+                core_text = ""
+                for page in doc_dict[year][party]:
+                    page_text = page.get_textbox(text_box)  # type: ignore
+                    for entry in toc:
+                        level = "#"*entry[0]
+                        title = entry[1]
+                        if len(title) >= 6:
+                            page_text = page_text.replace(
+                                title, f"{level} {title}")
+
+                    core_text += page_text
+                # Store core text as txt
+                output_file_name = f"{party}_{year}.md"
+                self.store_file(target_dir, output_file_name, core_text)
+
+        return
+
 
 if __name__ == "__main__":
     fh = FileHandler()
     fh.extract_complete("raw", "txt", debug=True)
+    fh.extract_to_markdown("raw", "clean chapters", debug=True)
